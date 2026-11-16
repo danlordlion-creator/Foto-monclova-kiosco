@@ -68,4 +68,53 @@ else:
         elif filtro == "Vintage Monclova":
             img = img.convert("RGB")
             # sepia simple
-            pixels
+            pixels = img.load()
+            for y in range(img.height):
+                for x in range(img.width):
+                    r,g,b = pixels[x,y]
+                    tr = int(0.393*r + 0.769*g + 0.189*b)
+                    tg = int(0.349*r + 0.686*g + 0.168*b)
+                    tb = int(0.272*r + 0.534*g + 0.131*b)
+                    pixels[x,y] = (min(255,tr), min(255,tg), min(255,tb))
+        elif filtro == "Rojo Pasión":
+            draw = ImageDraw.Draw(img)
+            draw.rectangle([(0,0), img.size], fill=(227,6,19,50))
+
+        # MARCOS
+        if marco == "Rojo Monclova":
+            draw = ImageDraw.Draw(img)
+            w,h = img.size
+            border = int(w*0.04)
+            draw.rectangle([(0,0),(w,h)], outline=color, width=border)
+        elif marco == "Polaroid 2026":
+            new_h = int(img.height * 1.3)
+            polaroid = Image.new("RGB", (img.width, new_h), "white")
+            polaroid.paste(img, (0,0))
+            draw = ImageDraw.Draw(polaroid)
+            draw.text((20, img.height+15), f"{logo} - {datetime.now().strftime('%d/%m/%Y')} - Monclova, Coah.", fill="black")
+            img = polaroid
+        elif marco == "Negro Premium":
+            draw = ImageDraw.Draw(img)
+            w,h = img.size
+            border = int(w*0.06)
+            draw.rectangle([(0,0),(w,h)], outline="black", width=border)
+
+        st.image(img, use_container_width=True)
+        st.markdown(f"<p style='text-align:center; color:{color}; font-family:Bebas Neue; font-size:22px;'>LISTA PARA IMPRIMIR EN {impresora}</p>", unsafe_allow_html=True)
+        
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG")
+        c1, c2 = st.columns(2)
+        c1.download_button("📥 GUARDAR", buf.getvalue(), file_name=f"FotoMonclova_{datetime.now().strftime('%H%M%S')}.jpg", mime="image/jpeg", use_container_width=True)
+        if c2.button("🖨️ IMPRIMIÓ - REGRESAR A COBRO", use_container_width=True):
+            st.session_state.pagado = False
+            st.success("Detectando impresión... Regresando a cobro")
+            import time
+            time.sleep(1)
+            st.rerun()
+
+        st.balloons()
+    else:
+        st.info("👆 Presiona 'Take photo' - Tienes 15 segundos para posar")
+
+st.markdown("<br><p style='text-align:center; color:#333; font-size:10px;'>KIOSKO V18 PREMIUM • MODO DEMO • FOTO MONCLOVA, COAH • AutoStart + Deteccion de Impresion</p>", unsafe_allow_html=True)
